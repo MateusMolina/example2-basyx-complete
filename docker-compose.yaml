@@ -7,3 +7,37 @@ services:
       - ./aas:/application/aas
     ports:
         - 8081:8081
+    depends_on:
+        aas-registry:
+            condition: service_healthy
+        sm-registry:
+            condition: service_healthy
+            
+  aas-registry:
+    image: eclipsebasyx/aas-registry-log-mem:2.0.0-SNAPSHOT
+    ports:
+      - 8082:8080
+    volumes:
+      - ./aas-registry.yml:/workspace/config/application.yml
+    
+  sm-registry:
+    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-SNAPSHOT
+    ports:
+      - 8083:8080
+    volumes:
+      - ./sm-registry.yml:/workspace/config/application.yml
+
+  aas-web-ui_v2:
+    image: eclipsebasyx/aas-gui:v2-240515
+    container_name: aas-web-ui_v2
+    ports:
+      - "3000:3000"
+    environment:
+      AAS_REGISTRY_PATH: "http://localhost:8082"
+      SUBMODEL_REGISTRY_PATH: "http://localhost:8083"
+      AAS_REPO_PATH: "http://localhost:8081/shells"
+      SUBMODEL_REPO_PATH: "http://localhost:8081/submodels"
+      CD_REPO_PATH: "http://localhost:8081/concept-descriptions"
+    depends_on:
+      aas-env:
+        condition: service_healthy

@@ -14,6 +14,19 @@ services:
     ports:
      - 27017:27017
     
+  mqtt:
+    image: eclipse-mosquitto:2.0.15
+    ports:
+      - 1884:1884
+    volumes:
+      - ./mosquitto:/mosquitto/config
+    healthcheck:
+      test: ["CMD-SHELL", mosquitto_sub -p 1884 -t 'topic' -C 1 -E -i probe -W 3]
+      interval: 5s
+      retries: 3
+      start_period: 1s
+      timeout: 10s   
+       
   aas-env:
     image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
     volumes:
@@ -27,6 +40,8 @@ services:
         aas-registry:
             condition: service_healthy
         sm-registry:
+            condition: service_healthy
+        mqtt:
             condition: service_healthy
             
   aas-registry:
